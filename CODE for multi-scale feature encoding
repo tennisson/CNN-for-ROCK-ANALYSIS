@@ -1,0 +1,112 @@
+import torch
+import torch.nn as nn
+import torchvision.models as models
+
+class MineralTextureEncoder(nn.Module):
+    """
+    Extracts low-level edge, texture, and multi-scale context features 
+    using a convolutional backbone.
+    """
+    def __init__(self, embed_dim=512):
+        super(MineralTextureEncoder, self).__init__()
+        # Using a reliable backbone like ResNet or EfficientNet to capture deep spatial patterns
+        resnet = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+        
+        # Keep features up to the layer3/layer4 blocks for spatial/structural content
+        self.backbone = nn.Sequential(*list(resnet.children())[:-2]) 
+        
+        # Projection layer to standardize channel dimensions
+        self.proj = nn.Conv2d(2048, embed_dim, kernel_size=1)
+        self.pool = nn.AdaptiveAvgPool2d((7, 7)) # Spatial token grid (7x7 = 49 tokens)
+
+    def forward(self, x):
+        features = self.backbone(x)
+        features = self.proj(features)
+        features = self.pool(features) # Shape: [Batch, embed_dim, 7, 7]
+        # Flatten spatial dimensions into tokens for Transformer layers
+        b, c, h, w = features.shape
+        features = features.view(b, c, h * w).permute(0, 2, 1) # Shape: [Batch, 49, embed_dim]
+        return features
+
+class CrossAttentionFusion(nn.Module):
+    """
+    Cross-Attention Feature Fusion (CAFF) Module.
+    Fuses complementary polarization properties between PPL and XPL systems.
+    """
+    def __init__(self, embed_dim=512, num_heads=8):
+        super(CrossAttentionFusion, self).__init__()
+        self.cross_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=True)
+        self.norm = nn.LayerNorm(embed_dim)
+        self.ffn = nn.Sequential(
+            nn.Linear(embed_dim, embed_dim * 2),
+            nn.ReLU(),
+            nn.Linear(embed_dim * 2, embed_dim)
+        )
+        self.norm2 = nn.LayerNorm(embed_dim)
+
+    def forward(self, query_stream, key_value_stream):
+        # query_stream attends to structural/optical markers in key_value_stream
+        attn_out, _ = self.cross_attn(query=query_stream, key=key_value_stream, value=key_value_stream)
+        x = self.norm(query_stream + attn_out)
+        ffn_out = self.ffn(x)
+        return self.norm2(x + ffn_out)
+
+class RockMultiFeatureEncoder(nn.Module):
+    """
+    Complete Multifeature Encoder accepting dual-polarization inputs.
+    Outputs a highly descriptive, compact embedding representing the thin-section.
+    """
+    def __init__(self, embed_dim=512, final_embedding_dim=256):
+        super(RockMultiFeatureEncoder, self).__init__()
+        # Dual-stream feature extraction encoders
+        self.ppl_encoder = MineralTextureEncoder(embed_dim=embed_dim)
+        self.xpl_encoder = MineralTextureEncoder(embed_dim=embed_dim)
+        
+        # Dual-directional Cross-Attention
+        self.ppl_attend_xpl = CrossAttentionFusion(embed_dim=embed_dim)
+        self.xpl_attend_ppl = CrossAttentionFusion(embed_dim=embed_dim)
+        
+        # Global aggregation layer
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        
+        # Projection head to downstream target space (Classification or Vector Database Search)
+        self.fc = nn.Sequential(
+            nn.Linear(embed_dim * 2, embed_dim),
+            nn.ReLU(),
+            nn.Linear(embed_dim, final_embedding_dim)
+        )
+
+    def forward(self, ppl_img, xpl_img):
+        # 1. Feature Extraction (Tokens)
+        ppl_feats = self.ppl_encoder(ppl_img) # Shape: [B, 49, embed_dim]
+        xpl_feats = self.xpl_encoder(xpl_img) # Shape: [B, 49, embed_dim]
+        
+        # 2. Cross-Attention Information Fusion
+        fused_ppl = self.ppl_attend_xpl(ppl_feats, xpl_feats)
+        fused_xpl = self.xpl_attend_ppl(xpl_feats, ppl_feats)
+        
+        # 3. Concatenate and Pool over spatial sequence length
+        combined = torch.cat([fused_ppl, fused_xpl], dim=-1) # Shape: [B, 49, embed_dim * 2]
+        combined = combined.permute(0, 2, 1) # Shape: [B, embed_dim * 2, 49]
+        
+        pooled = self.global_pool(combined).squeeze(-1) # Shape: [B, embed_dim * 2]
+        
+        # 4. Final Multifeature Encoding Vector
+        rock_embedding = self.fc(pooled) # Shape: [B, final_embedding_dim]
+        return rock_embedding
+
+# --- Example Usage Validation ---
+if __name__ == "__main__":
+    # Simulate a batch of 4 thin-section pairs (3 channels, 224x224 pixels)
+    batch_size = 4
+    mock_ppl = torch.randn(batch_size, 3, 224, 224)
+    mock_xpl = torch.randn(batch_size, 3, 224, 224)
+    
+    encoder = RockMultiFeatureEncoder(embed_dim=512, final_embedding_dim=256)
+    encoder.eval()
+    
+    with torch.no_grad():
+        embeddings = encoder(mock_ppl, mock_xpl)
+        
+    print(f"Generated thin-section embedding shape: {embeddings.shape}")
+    # Output matches: [4, 256] -> Perfect for distance calculations or classification headers
