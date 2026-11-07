@@ -44,7 +44,7 @@ In this step, we use the Dense model to add a different layer. The parameter whi
 <img width="635" height="47" alt="image" src="https://github.com/user-attachments/assets/f081e076-2601-409c-950d-6dae34dfaf25" />
 
 
-After adding a Hidden layer we add an output layer in full connection layer out_dim= 1 which means one output node here we use the sigmoid function because our target attribute has a binary class which is charnockite or geneiss that’s why we use sigmoid activation function.
+After adding a Hidden layer we add an output layer in full connection layer out_dim= 1 which means one output node here we use the sigmoid function because our target attribute has a binary class which is charnockite or gneiss that’s why we use sigmoid activation function.
 <img width="635" height="23" alt="image" src="https://github.com/user-attachments/assets/2ffa16e3-6a68-45fc-aad8-e2cf8bd35ca7" />
 
 
@@ -94,7 +94,7 @@ Found 16 files belonging to 2 classes.
 
 2.2	Training set & Test set
 
-In this step, we import the images that we want to train. Remember our dataset contains 1000 images 8000 for train and 2000 for test and here first we import our images from the working directory that we want to train. Then target size here 64 by 64 that’s expected CNN which we defined earlier in Building the CNN part. Then batch size that the size of batch in which some random sample of our image will be included and that contains the number of images that will go through the CNN after which the weight will be updated. And finally, the class mode that the parameter indicating if your class is dependent variable is binary or has more than two categories and therefore since two-class here charnockite & geniess that’s why class mode is binary here that we use here.
+In this step, we import the images that we want to train. Remember our dataset contains 1000 images 8000 for train and 2000 for test and here first we import our images from the working directory that we want to train. Then target size here 64 by 64 that’s expected CNN which we defined earlier in Building the CNN part. Then batch size that the size of batch in which some random sample of our image will be included and that contains the number of images that will go through the CNN after which the weight will be updated. And finally, the class mode that the parameter indicating if your class is dependent variable is binary or has more than two categories and therefore since two-class here charnockite & gneiss that’s why class mode is binary here that we use here.
 
 
 
@@ -182,7 +182,7 @@ In this step, we import libraries the first library which we import here is nump
 <img width="467" height="95" alt="image" src="https://github.com/user-attachments/assets/1c92e279-6025-448f-9281-e6770ef53d8a" />
 3.2	Import the Image
 
-In this step, we import our single image we don’t know either is charnockite image or geneiss image (like in mathematical part when we train images 0 and X and then make a prediction X). Here we pass two arguments first is image load and second is target size. Here we set target size 64 by 64 as expected our CNN model.
+In this step, we import our single image we don’t know either is charnockite image or gneiss image (like in mathematical part when we train images 0 and X and then make a prediction X). Here we pass two arguments first is image load and second is target size. Here we set target size 64 by 64 as expected our CNN model.
 
 <img width="635" height="111" alt="image" src="https://github.com/user-attachments/assets/66179e5d-d618-46e7-b10a-c718e9816331" />
 <img width="199" height="31" alt="image" src="https://github.com/user-attachments/assets/33130860-ff2b-45ff-a5f9-dd7f86aea8e9" />
