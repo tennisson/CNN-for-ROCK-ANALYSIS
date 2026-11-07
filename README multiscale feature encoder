@@ -1,0 +1,2 @@
+An effective multifeature encoder for microscopic thin-section rock images must capture distinct geological properties: color/composition from Plane-Polarized Light (PPL), interference/birefringence from Crossed-Polarized Light (XPL), and grain boundaries/textures
+The PyTorch implementation below uses a Cross-Attention Feature Fusion (CAFF) Network alongside a multi-scale CNN/Transformer backbone. It processes PPL and XPL image pairs, extracts low-level textures, and fuses them via cross-attention to output a unified feature embedding
